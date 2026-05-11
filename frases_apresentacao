@@ -1,0 +1,7 @@
+Como o CHARTEVENTS e uma tabela muito grande, usamos o Google BigQuery como motor de processamento distribuido para fazer os joins, filtros temporais e agregacoes principais.
+
+Na pratica, os CSVs ficam no Google Cloud Storage, sao carregados para tabelas BigQuery, e depois uma query cria uma tabela final com uma linha por ICUSTAY_ID.
+
+Isto permite aplicar a janela de previsao das primeiras 24 horas sem processar todo o dataset localmente, reduzindo tempo de execucao e uso de memoria.
+
+Depois do preprocessamento pesado em BigQuery, usamos Python e scikit-learn pipelines para a preparacao final: split por SUBJECT_ID, imputacao, scaling, encoding e treino dos modelos.

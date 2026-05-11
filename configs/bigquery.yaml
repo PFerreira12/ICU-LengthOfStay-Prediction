@@ -1,0 +1,31 @@
+project_id: icu-los-prediction-20260510
+dataset_id: icu_los
+location: EU
+
+window_hours: 24
+top_n_items: 50
+
+gcs:
+  bucket: icu-los-prediction-20260510-raw
+  raw_prefix: raw
+  processed_prefix: processed
+
+tables:
+  chartevents: CHARTEVENTS
+  icustays: ICUSTAYS
+  d_items: D_ITEMS
+  patients: PATIENTS
+  admissions: ADMISSIONS
+
+raw_files:
+  chartevents: CHARTEVENTS.csv.gz
+  icustays: ICUSTAYS.csv.gz
+  d_items: D_ITEMS.csv.gz
+  patients: PATIENTS.csv.gz
+  admissions: ADMISSIONS.csv.gz
+
+outputs:
+  selected_items_table: selected_items
+  features_table: features_24h
+  quality_report_table: quality_report_24h
+  features_export_uri: gs://icu-los-prediction-20260510-raw/processed/features_24h_*.csv

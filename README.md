@@ -335,15 +335,17 @@ This repository already includes a first local preprocessing pipeline in:
 src/preprocessing/preprocess.py
 ```
 
-This first version currently uses:
+This local preprocessing version currently uses:
 
 ```text
 data/raw/CHARTEVENTS.csv.gz
 data/raw/ICUSTAYS.csv.gz
 data/raw/D_ITEMS.csv.gz
+data/raw/PATIENTS.csv.gz
+data/raw/ADMISSIONS.csv.gz
 ```
 
-It is the starter pipeline, not the final full-table pipeline.
+It is still the first table group pipeline, but it now produces a clearer handoff between preprocessing and the later preparation/training stages.
 
 ### Setup
 
@@ -367,9 +369,10 @@ The script will:
 - restrict events to the first `window_hours` of each ICU stay
 - select the top-N most frequent `ITEMID`s
 - aggregate `mean`, `min`, `max`, `std`, `count`, and `last`
+- add non-leaky patient/admission context such as age, gender, admission type, insurance, ethnicity, marital status, care unit, and ED duration
 - create one row per `ICUSTAY_ID`
-- split train/test by `SUBJECT_ID`
-- impute missing values and scale features using training data only
+- write a preprocessing quality report
+- also create train/test files for the preparation/training stage by splitting on `SUBJECT_ID`, imputing/scaling numeric features, and one-hot encoding categorical features using training data only
 
 Expected outputs:
 
@@ -378,7 +381,78 @@ data/processed/features.csv
 data/processed/train.csv
 data/processed/test.csv
 reports/selected_items.csv
+reports/quality_report.csv
 ```
+
+`data/processed/features.csv` is the main preprocessing deliverable. It keeps identifiers, the LOS target, raw categorical context, and engineered chart-event features. `train.csv` and `test.csv` are convenience outputs for the next project stage.
+
+### GCP / BigQuery Note
+
+If the raw tables are already stored in GCP, export the same table group to compressed CSV files with the paths configured in `configs/preprocessing.yaml`, or mount/download them into `data/raw/` before running the script. The current Python pipeline is local and chunked; the next scalability step is to move the heavy `CHARTEVENTS` filtering and aggregation into BigQuery while keeping the same output contract:
+
+```text
+1 row per ICUSTAY_ID
+no events after INTIME + window_hours
+traceability IDs retained
+LOS target retained
+leakage-prone discharge/death fields excluded from features
+```
+
+### BigQuery Run
+
+For the large `CHARTEVENTS` workflow, use BigQuery instead of processing the full file locally.
+
+1. Edit `configs/bigquery.yaml` with your real GCP values:
+
+```yaml
+project_id: your-gcp-project-id
+dataset_id: icu_los
+location: EU
+
+gcs:
+  bucket: your-bucket-name
+  raw_prefix: mimic/raw
+  processed_prefix: mimic/processed
+```
+
+2. Install the GCP Python clients:
+
+```bash
+pip install -r requirements.txt
+```
+
+3. Authenticate locally:
+
+```bash
+gcloud auth application-default login
+gcloud config set project YOUR_PROJECT_ID
+```
+
+4. If the CSVs are in Cloud Storage but not yet loaded into BigQuery, run:
+
+```bash
+python -m src.preprocessing.bigquery_preprocess --config configs/bigquery.yaml --load-raw
+```
+
+5. If the tables are already loaded in BigQuery, run only the preprocessing query:
+
+```bash
+python -m src.preprocessing.bigquery_preprocess --config configs/bigquery.yaml
+```
+
+6. To export the final feature table to Cloud Storage:
+
+```bash
+python -m src.preprocessing.bigquery_preprocess --config configs/bigquery.yaml --skip-query --export
+```
+
+7. To export and download the feature shards locally:
+
+```bash
+python -m src.preprocessing.bigquery_preprocess --config configs/bigquery.yaml --skip-query --export --download data/processed/bigquery_features
+```
+
+This BigQuery path uses distributed SQL execution for the expensive work: joining ICU stays to chart events, applying the prediction window, selecting frequent `ITEMID`s, aggregating measurements, pivoting features, and joining patient/admission context.
 
 ### Next Implementation Checklist
 
@@ -386,7 +460,8 @@ reports/selected_items.csv
 - Validate source columns for each table
 - Run the current `CHARTEVENTS` starter pipeline
 - Inspect `reports/selected_items.csv`
-- Add demographic and admission features
+- Inspect `reports/quality_report.csv`
+- Confirm that demographic and admission features match the experiment design
 - Add lab feature engineering
 - Add input/output event feature engineering
 - Add medication, diagnosis, and procedure features

@@ -7,9 +7,12 @@ input:
   chartevents: data/raw/CHARTEVENTS.csv.gz
   icustays: data/raw/ICUSTAYS.csv.gz
   d_items: data/raw/D_ITEMS.csv.gz
+  patients: data/raw/PATIENTS.csv.gz
+  admissions: data/raw/ADMISSIONS.csv.gz
 
 output:
   features: data/processed/features.csv
   train: data/processed/train.csv
   test: data/processed/test.csv
   item_summary: reports/selected_items.csv
+  quality_report: reports/quality_report.csv
