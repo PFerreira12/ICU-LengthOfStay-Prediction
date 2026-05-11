@@ -14,6 +14,84 @@ ROOT = Path(__file__).resolve().parents[2]
 SQL_TEMPLATE = ROOT / "sql" / "bigquery_preprocessing.sql"
 
 
+TABLE_SCHEMAS = {
+    "chartevents": [
+        bigquery.SchemaField("ROW_ID", "INT64"),
+        bigquery.SchemaField("SUBJECT_ID", "INT64"),
+        bigquery.SchemaField("HADM_ID", "INT64"),
+        bigquery.SchemaField("ICUSTAY_ID", "INT64"),
+        bigquery.SchemaField("ITEMID", "INT64"),
+        bigquery.SchemaField("CHARTTIME", "TIMESTAMP"),
+        bigquery.SchemaField("STORETIME", "TIMESTAMP"),
+        bigquery.SchemaField("CGID", "INT64"),
+        bigquery.SchemaField("VALUE", "STRING"),
+        bigquery.SchemaField("VALUENUM", "FLOAT64"),
+        bigquery.SchemaField("VALUEUOM", "STRING"),
+        bigquery.SchemaField("WARNING", "INT64"),
+        bigquery.SchemaField("ERROR", "INT64"),
+        bigquery.SchemaField("RESULTSTATUS", "STRING"),
+        bigquery.SchemaField("STOPPED", "STRING"),
+    ],
+    "icustays": [
+        bigquery.SchemaField("ROW_ID", "INT64"),
+        bigquery.SchemaField("SUBJECT_ID", "INT64"),
+        bigquery.SchemaField("HADM_ID", "INT64"),
+        bigquery.SchemaField("ICUSTAY_ID", "INT64"),
+        bigquery.SchemaField("DBSOURCE", "STRING"),
+        bigquery.SchemaField("FIRST_CAREUNIT", "STRING"),
+        bigquery.SchemaField("LAST_CAREUNIT", "STRING"),
+        bigquery.SchemaField("FIRST_WARDID", "INT64"),
+        bigquery.SchemaField("LAST_WARDID", "INT64"),
+        bigquery.SchemaField("INTIME", "TIMESTAMP"),
+        bigquery.SchemaField("OUTTIME", "TIMESTAMP"),
+        bigquery.SchemaField("LOS", "FLOAT64"),
+    ],
+    "d_items": [
+        bigquery.SchemaField("ROW_ID", "INT64"),
+        bigquery.SchemaField("ITEMID", "INT64"),
+        bigquery.SchemaField("LABEL", "STRING"),
+        bigquery.SchemaField("ABBREVIATION", "STRING"),
+        bigquery.SchemaField("DBSOURCE", "STRING"),
+        bigquery.SchemaField("LINKSTO", "STRING"),
+        bigquery.SchemaField("CATEGORY", "STRING"),
+        bigquery.SchemaField("UNITNAME", "STRING"),
+        bigquery.SchemaField("PARAM_TYPE", "STRING"),
+        bigquery.SchemaField("CONCEPTID", "STRING"),
+    ],
+    "patients": [
+        bigquery.SchemaField("ROW_ID", "INT64"),
+        bigquery.SchemaField("SUBJECT_ID", "INT64"),
+        bigquery.SchemaField("GENDER", "STRING"),
+        bigquery.SchemaField("DOB", "TIMESTAMP"),
+        bigquery.SchemaField("DOD", "TIMESTAMP"),
+        bigquery.SchemaField("DOD_HOSP", "TIMESTAMP"),
+        bigquery.SchemaField("DOD_SSN", "TIMESTAMP"),
+        bigquery.SchemaField("EXPIRE_FLAG", "INT64"),
+    ],
+    "admissions": [
+        bigquery.SchemaField("ROW_ID", "INT64"),
+        bigquery.SchemaField("SUBJECT_ID", "INT64"),
+        bigquery.SchemaField("HADM_ID", "INT64"),
+        bigquery.SchemaField("ADMITTIME", "TIMESTAMP"),
+        bigquery.SchemaField("DISCHTIME", "TIMESTAMP"),
+        bigquery.SchemaField("DEATHTIME", "TIMESTAMP"),
+        bigquery.SchemaField("ADMISSION_TYPE", "STRING"),
+        bigquery.SchemaField("ADMISSION_LOCATION", "STRING"),
+        bigquery.SchemaField("DISCHARGE_LOCATION", "STRING"),
+        bigquery.SchemaField("INSURANCE", "STRING"),
+        bigquery.SchemaField("LANGUAGE", "STRING"),
+        bigquery.SchemaField("RELIGION", "STRING"),
+        bigquery.SchemaField("MARITAL_STATUS", "STRING"),
+        bigquery.SchemaField("ETHNICITY", "STRING"),
+        bigquery.SchemaField("EDREGTIME", "TIMESTAMP"),
+        bigquery.SchemaField("EDOUTTIME", "TIMESTAMP"),
+        bigquery.SchemaField("DIAGNOSIS", "STRING"),
+        bigquery.SchemaField("HOSPITAL_EXPIRE_FLAG", "INT64"),
+        bigquery.SchemaField("HAS_CHARTEVENTS_DATA", "INT64"),
+    ],
+}
+
+
 def read_config(path: Path) -> dict[str, Any]:
     with path.open("r", encoding="utf-8") as file:
         return yaml.safe_load(file)
@@ -67,14 +145,15 @@ def raw_uri(config: dict[str, Any], table_key: str) -> str:
 
 def load_raw_tables(client: bigquery.Client, config: dict[str, Any]) -> None:
     ensure_dataset(client, config)
-    job_config = bigquery.LoadJobConfig(
-        source_format=bigquery.SourceFormat.CSV,
-        skip_leading_rows=1,
-        autodetect=True,
-        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
-    )
 
     for table_key, table_name in config["tables"].items():
+        job_config = bigquery.LoadJobConfig(
+            source_format=bigquery.SourceFormat.CSV,
+            skip_leading_rows=1,
+            schema=TABLE_SCHEMAS[table_key],
+            write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+            allow_quoted_newlines=True,
+        )
         table_id = f"{config['project_id']}.{config['dataset_id']}.{table_name}"
         uri = raw_uri(config, table_key)
         print(f"Loading {uri} -> {table_id}")

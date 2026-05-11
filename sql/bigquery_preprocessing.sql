@@ -42,7 +42,7 @@ ranked_items AS (
   FROM windowed_events
   GROUP BY ITEMID
   ORDER BY event_count DESC
-  LIMIT top_n_items
+  LIMIT {{top_n_items}}
 )
 SELECT
   ranked_items.ITEMID,
@@ -56,14 +56,14 @@ LEFT JOIN `{{project_id}}.{{dataset_id}}.{{d_items_table}}` AS d
 
 SET feature_exprs = (
   SELECT STRING_AGG(
-    FORMAT("""
-      MAX(IF(ITEMID = %1$d, mean_value, NULL)) AS item_%1$d_mean,
-      MAX(IF(ITEMID = %1$d, min_value, NULL)) AS item_%1$d_min,
-      MAX(IF(ITEMID = %1$d, max_value, NULL)) AS item_%1$d_max,
-      MAX(IF(ITEMID = %1$d, std_value, NULL)) AS item_%1$d_std,
-      MAX(IF(ITEMID = %1$d, event_count, NULL)) AS item_%1$d_count,
-      MAX(IF(ITEMID = %1$d, last_value, NULL)) AS item_%1$d_last
-    """, ITEMID),
+    CONCAT(
+      "MAX(IF(ITEMID = ", CAST(ITEMID AS STRING), ", mean_value, NULL)) AS item_", CAST(ITEMID AS STRING), "_mean,\n",
+      "      MAX(IF(ITEMID = ", CAST(ITEMID AS STRING), ", min_value, NULL)) AS item_", CAST(ITEMID AS STRING), "_min,\n",
+      "      MAX(IF(ITEMID = ", CAST(ITEMID AS STRING), ", max_value, NULL)) AS item_", CAST(ITEMID AS STRING), "_max,\n",
+      "      MAX(IF(ITEMID = ", CAST(ITEMID AS STRING), ", std_value, NULL)) AS item_", CAST(ITEMID AS STRING), "_std,\n",
+      "      MAX(IF(ITEMID = ", CAST(ITEMID AS STRING), ", event_count, NULL)) AS item_", CAST(ITEMID AS STRING), "_count,\n",
+      "      MAX(IF(ITEMID = ", CAST(ITEMID AS STRING), ", last_value, NULL)) AS item_", CAST(ITEMID AS STRING), "_last"
+    ),
     ",\n"
   )
   FROM `{{project_id}}.{{dataset_id}}.{{selected_items_table}}`
