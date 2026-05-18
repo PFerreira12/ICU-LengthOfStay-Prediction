@@ -8,12 +8,6 @@ from typing import Iterable
 import numpy as np
 import pandas as pd
 import yaml
-from sklearn.compose import ColumnTransformer
-from sklearn.impute import SimpleImputer
-from sklearn.model_selection import GroupShuffleSplit
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.preprocessing import StandardScaler
 
 
 CHART_COLS = ["SUBJECT_ID", "HADM_ID", "ICUSTAY_ID", "ITEMID", "CHARTTIME", "VALUENUM"]
@@ -47,20 +41,21 @@ ADMISSION_COLS = [
 
 @dataclass
 class PreprocessConfig:
+    #input
     chartevents: Path
     icustays: Path
     d_items: Path | None
     patients: Path | None
     admissions: Path | None
+    
+    #output
     output_features: Path
-    output_train: Path
-    output_test: Path
     output_item_summary: Path
     output_quality_report: Path
+    
+    #variables
     window_hours: int = 24
     top_n_items: int = 50
-    test_size: float = 0.2
-    random_state: int = 42
     chunksize: int = 500_000
 
 
@@ -351,103 +346,42 @@ def write_quality_report(
     report.to_csv(config.output_quality_report, index=False)
 
 
-def split_impute_scale(features: pd.DataFrame, config: PreprocessConfig) -> tuple[pd.DataFrame, pd.DataFrame]:
-    id_cols = ["SUBJECT_ID", "HADM_ID", "ICUSTAY_ID"]
-    target_col = "LOS"
-    feature_cols = [col for col in features.columns if col not in id_cols + [target_col]]
-    categorical_cols = features[feature_cols].select_dtypes(include=["object", "string", "category"]).columns.tolist()
-    numeric_cols = [col for col in feature_cols if col not in categorical_cols]
-
-    splitter = GroupShuffleSplit(
-        n_splits=1,
-        test_size=config.test_size,
-        random_state=config.random_state,
-    )
-    train_idx, test_idx = next(splitter.split(features, groups=features["SUBJECT_ID"]))
-    train = features.iloc[train_idx].copy()
-    test = features.iloc[test_idx].copy()
-
-    transformers = []
-    if numeric_cols:
-        numeric_pipeline = Pipeline(
-            steps=[
-                ("imputer", SimpleImputer(strategy="median", add_indicator=True)),
-                ("scaler", StandardScaler()),
-            ]
-        )
-        transformers.append(("num", numeric_pipeline, numeric_cols))
-    if categorical_cols:
-        categorical_pipeline = Pipeline(
-            steps=[
-                ("imputer", SimpleImputer(strategy="most_frequent")),
-                ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
-            ]
-        )
-        transformers.append(("cat", categorical_pipeline, categorical_cols))
-
-    preprocessor = ColumnTransformer(transformers=transformers)
-    train_values = preprocessor.fit_transform(train[feature_cols])
-    test_values = preprocessor.transform(test[feature_cols])
-    transformed_cols = [
-        col.replace("num__", "").replace("cat__", "")
-        for col in preprocessor.get_feature_names_out()
-    ]
-
-    train_out = pd.concat(
-        [
-            train[id_cols + [target_col]].reset_index(drop=True),
-            pd.DataFrame(train_values, columns=transformed_cols),
-        ],
-        axis=1,
-    )
-    test_out = pd.concat(
-        [
-            test[id_cols + [target_col]].reset_index(drop=True),
-            pd.DataFrame(test_values, columns=transformed_cols),
-        ],
-        axis=1,
-    )
-    return train_out, test_out
-
-
 def build_config(args: argparse.Namespace) -> PreprocessConfig:
     raw = read_config(args.config)
     return PreprocessConfig(
+
         chartevents=Path(args.chartevents or raw["input"]["chartevents"]),
         icustays=Path(args.icustays or raw["input"]["icustays"]),
         d_items=Path(args.d_items or raw["input"].get("d_items")) if (args.d_items or raw["input"].get("d_items")) else None,
         patients=Path(args.patients or raw["input"].get("patients")) if (args.patients or raw["input"].get("patients")) else None,
         admissions=Path(args.admissions or raw["input"].get("admissions")) if (args.admissions or raw["input"].get("admissions")) else None,
+
         output_features=Path(args.output_features or raw["output"]["features"]),
-        output_train=Path(args.output_train or raw["output"]["train"]),
-        output_test=Path(args.output_test or raw["output"]["test"]),
         output_item_summary=Path(args.output_item_summary or raw["output"]["item_summary"]),
         output_quality_report=Path(args.output_quality_report or raw["output"]["quality_report"]),
+        
         window_hours=args.window_hours or raw.get("window_hours", 24),
         top_n_items=args.top_n_items or raw.get("top_n_items", 50),
-        test_size=args.test_size or raw.get("test_size", 0.2),
-        random_state=args.random_state or raw.get("random_state", 42),
-        chunksize=args.chunksize,
+        chunksize=args.chunksize
     )
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build ICU LOS preprocessing features from MIMIC-like CSV files.")
+    
     parser.add_argument("--config", type=Path, default=Path("configs/preprocessing.yaml"))
     parser.add_argument("--chartevents", type=Path)
     parser.add_argument("--icustays", type=Path)
     parser.add_argument("--d-items", type=Path)
     parser.add_argument("--patients", type=Path)
     parser.add_argument("--admissions", type=Path)
+
     parser.add_argument("--output-features", type=Path)
-    parser.add_argument("--output-train", type=Path)
-    parser.add_argument("--output-test", type=Path)
     parser.add_argument("--output-item-summary", type=Path)
     parser.add_argument("--output-quality-report", type=Path)
+
     parser.add_argument("--window-hours", type=int)
     parser.add_argument("--top-n-items", type=int)
-    parser.add_argument("--test-size", type=float)
-    parser.add_argument("--random-state", type=int)
     parser.add_argument("--chunksize", type=int, default=500_000)
     return parser.parse_args()
 
@@ -467,13 +401,8 @@ def main() -> None:
     features.to_csv(config.output_features, index=False)
     write_quality_report(config, icu, features, quality, selected_items)
 
-    train, test = split_impute_scale(features, config)
-    train.to_csv(config.output_train, index=False)
-    test.to_csv(config.output_test, index=False)
-
     print(f"Selected {len(selected_items)} ITEMIDs.")
     print(f"Feature table: {features.shape[0]} rows x {features.shape[1]} columns")
-    print(f"Train: {train.shape[0]} rows | Test: {test.shape[0]} rows")
     print(f"Quality report: {config.output_quality_report}")
 
 
