@@ -1,0 +1,16 @@
+{
+  "best_model": "HistGradientBoosting_Tuned",
+  "use_log_target": false,
+  "n_features": 776,
+  "train_shape": [
+    47333,
+    780
+  ],
+  "test_shape": [
+    11792,
+    780
+  ],
+  "results_file": "C:\\Users\\leono\\Documents\\ICU-LengthOfStay-Prediction\\results\\final_model_comparison.csv",
+  "importance_file": "C:\\Users\\leono\\Documents\\ICU-LengthOfStay-Prediction\\results\\permutation_importance.csv",
+  "saved_model": "C:\\Users\\leono\\Documents\\ICU-LengthOfStay-Prediction\\models\\histgradientboosting_tuned.joblib"
+}
