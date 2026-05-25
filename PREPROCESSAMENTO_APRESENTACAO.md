@@ -210,6 +210,152 @@ E depois é descarregado localmente para:
 data/processed/bigquery_features
 ```
 
+## Versões com Mais Tabelas
+
+Para evoluir o preprocessamento para além do baseline, foram adicionadas versões progressivas para comparação experimental.
+
+O baseline atual usa 5 tabelas:
+
+```text
+ICUSTAYS + CHARTEVENTS + D_ITEMS + PATIENTS + ADMISSIONS
+```
+
+A nova versão com 7 tabelas adiciona dados laboratoriais:
+
+```text
+ICUSTAYS + CHARTEVENTS + D_ITEMS + PATIENTS + ADMISSIONS + LABEVENTS + D_LABITEMS
+```
+
+A nova versão com 9 tabelas adiciona também outputs e prescrições:
+
+```text
+ICUSTAYS + CHARTEVENTS + D_ITEMS + PATIENTS + ADMISSIONS + LABEVENTS + D_LABITEMS + OUTPUTEVENTS + PRESCRIPTIONS
+```
+
+Isto permite comparar se cada grupo extra de tabelas melhora a previsão de LOS.
+
+### Versão com 7 tabelas
+
+Configuração:
+
+```text
+configs/bigquery_7_tables.yaml
+```
+
+SQL:
+
+```text
+sql/bigquery_preprocessing_7_tables.sql
+```
+
+Tabela final:
+
+```text
+icu_los.features_24h_7_tables
+```
+
+Comando:
+
+```powershell
+python -m src.preprocessing.bigquery_preprocess --config configs/bigquery_7_tables.yaml --sql-template sql/bigquery_preprocessing_7_tables.sql --load-raw --export --download data/processed/bigquery_features_7_tables
+```
+
+Se as tabelas raw já estiverem carregadas:
+
+```powershell
+python -m src.preprocessing.bigquery_preprocess --config configs/bigquery_7_tables.yaml --sql-template sql/bigquery_preprocessing_7_tables.sql --export --download data/processed/bigquery_features_7_tables
+```
+
+Preparação para treino:
+
+```powershell
+python -m src.preparation.prepare --input-features data/processed/bigquery_features_7_tables/features_24h_7_tables_000000000000.csv --output-train data/processed/train_7_tables.csv --output-test data/processed/test_7_tables.csv
+```
+
+### Versão com 9 tabelas
+
+Configuração:
+
+```text
+configs/bigquery_9_tables.yaml
+```
+
+SQL:
+
+```text
+sql/bigquery_preprocessing_9_tables.sql
+```
+
+Tabela final:
+
+```text
+icu_los.features_24h_9_tables
+```
+
+Comando:
+
+```powershell
+python -m src.preprocessing.bigquery_preprocess --config configs/bigquery_9_tables.yaml --sql-template sql/bigquery_preprocessing_9_tables.sql --load-raw --export --download data/processed/bigquery_features_9_tables
+```
+
+Se as tabelas raw já estiverem carregadas:
+
+```powershell
+python -m src.preprocessing.bigquery_preprocess --config configs/bigquery_9_tables.yaml --sql-template sql/bigquery_preprocessing_9_tables.sql --export --download data/processed/bigquery_features_9_tables
+```
+
+Preparação para treino:
+
+```powershell
+python -m src.preparation.prepare --input-features data/processed/bigquery_features_9_tables/features_24h_9_tables_000000000000.csv --output-train data/processed/train_9_tables.csv --output-test data/processed/test_9_tables.csv
+```
+
+### Versão completa experimental
+
+Também existe uma versão mais alargada, preparada para incluir inputs:
+
+```text
+configs/bigquery_more_tables.yaml
+```
+
+Esta versão gera:
+
+```text
+icu_los.features_24h_more_tables
+```
+
+Além das tabelas já usadas nas versões anteriores, esta versão está preparada para incluir:
+
+- `INPUTEVENTS_CV` e `INPUTEVENTS_MV`: fluidos, medicação e entradas administradas;
+
+Comando:
+
+```powershell
+python -m src.preprocessing.bigquery_preprocess --config configs/bigquery_more_tables.yaml --sql-template sql/bigquery_preprocessing_more_tables.sql --load-raw --export --download data/processed/bigquery_features_more_tables
+```
+
+Se as tabelas raw já estiverem carregadas no BigQuery, pode-se retirar `--load-raw`:
+
+```powershell
+python -m src.preprocessing.bigquery_preprocess --config configs/bigquery_more_tables.yaml --sql-template sql/bigquery_preprocessing_more_tables.sql --export --download data/processed/bigquery_features_more_tables
+```
+
+Para validar o custo da query antes de executar:
+
+```powershell
+python -m src.preprocessing.bigquery_preprocess --config configs/bigquery_more_tables.yaml --sql-template sql/bigquery_preprocessing_more_tables.sql --dry-run
+```
+
+Esta abordagem permite comparar experimentalmente:
+
+- 5 tabelas: `CHARTEVENTS` + contexto;
+- 7 tabelas: baseline + labs;
+- 9 tabelas: labs + outputs + prescrições;
+- versão completa: inputs adicionais;
+- custo de processamento;
+- número de features;
+- impacto nas métricas de treino.
+
 ## Comandos Usados
 
 Autenticação:

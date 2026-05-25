@@ -89,6 +89,118 @@ TABLE_SCHEMAS = {
         bigquery.SchemaField("HOSPITAL_EXPIRE_FLAG", "INT64"),
         bigquery.SchemaField("HAS_CHARTEVENTS_DATA", "INT64"),
     ],
+    "labevents": [
+        bigquery.SchemaField("ROW_ID", "INT64"),
+        bigquery.SchemaField("SUBJECT_ID", "INT64"),
+        bigquery.SchemaField("HADM_ID", "INT64"),
+        bigquery.SchemaField("ITEMID", "INT64"),
+        bigquery.SchemaField("CHARTTIME", "TIMESTAMP"),
+        bigquery.SchemaField("VALUE", "STRING"),
+        bigquery.SchemaField("VALUENUM", "FLOAT64"),
+        bigquery.SchemaField("VALUEUOM", "STRING"),
+        bigquery.SchemaField("FLAG", "STRING"),
+    ],
+    "d_labitems": [
+        bigquery.SchemaField("ROW_ID", "INT64"),
+        bigquery.SchemaField("ITEMID", "INT64"),
+        bigquery.SchemaField("LABEL", "STRING"),
+        bigquery.SchemaField("FLUID", "STRING"),
+        bigquery.SchemaField("CATEGORY", "STRING"),
+        bigquery.SchemaField("LOINC_CODE", "STRING"),
+    ],
+    "outputevents": [
+        bigquery.SchemaField("ROW_ID", "INT64"),
+        bigquery.SchemaField("SUBJECT_ID", "INT64"),
+        bigquery.SchemaField("HADM_ID", "INT64"),
+        bigquery.SchemaField("ICUSTAY_ID", "INT64"),
+        bigquery.SchemaField("CHARTTIME", "TIMESTAMP"),
+        bigquery.SchemaField("ITEMID", "INT64"),
+        bigquery.SchemaField("VALUE", "FLOAT64"),
+        bigquery.SchemaField("VALUEUOM", "STRING"),
+        bigquery.SchemaField("STORETIME", "TIMESTAMP"),
+        bigquery.SchemaField("CGID", "INT64"),
+        bigquery.SchemaField("STOPPED", "STRING"),
+        bigquery.SchemaField("NEWBOTTLE", "INT64"),
+        bigquery.SchemaField("ISERROR", "INT64"),
+    ],
+    "inputevents_cv": [
+        bigquery.SchemaField("ROW_ID", "INT64"),
+        bigquery.SchemaField("SUBJECT_ID", "INT64"),
+        bigquery.SchemaField("HADM_ID", "INT64"),
+        bigquery.SchemaField("ICUSTAY_ID", "INT64"),
+        bigquery.SchemaField("CHARTTIME", "TIMESTAMP"),
+        bigquery.SchemaField("ITEMID", "INT64"),
+        bigquery.SchemaField("AMOUNT", "FLOAT64"),
+        bigquery.SchemaField("AMOUNTUOM", "STRING"),
+        bigquery.SchemaField("RATE", "FLOAT64"),
+        bigquery.SchemaField("RATEUOM", "STRING"),
+        bigquery.SchemaField("STORETIME", "TIMESTAMP"),
+        bigquery.SchemaField("CGID", "INT64"),
+        bigquery.SchemaField("ORDERID", "INT64"),
+        bigquery.SchemaField("LINKORDERID", "INT64"),
+        bigquery.SchemaField("STOPPED", "STRING"),
+        bigquery.SchemaField("NEWBOTTLE", "INT64"),
+        bigquery.SchemaField("ORIGINALAMOUNT", "FLOAT64"),
+        bigquery.SchemaField("ORIGINALAMOUNTUOM", "STRING"),
+        bigquery.SchemaField("ORIGINALROUTE", "STRING"),
+        bigquery.SchemaField("ORIGINALRATE", "FLOAT64"),
+        bigquery.SchemaField("ORIGINALRATEUOM", "STRING"),
+        bigquery.SchemaField("ORIGINALSITE", "STRING"),
+    ],
+    "inputevents_mv": [
+        bigquery.SchemaField("ROW_ID", "INT64"),
+        bigquery.SchemaField("SUBJECT_ID", "INT64"),
+        bigquery.SchemaField("HADM_ID", "INT64"),
+        bigquery.SchemaField("ICUSTAY_ID", "INT64"),
+        bigquery.SchemaField("STARTTIME", "TIMESTAMP"),
+        bigquery.SchemaField("ENDTIME", "TIMESTAMP"),
+        bigquery.SchemaField("ITEMID", "INT64"),
+        bigquery.SchemaField("AMOUNT", "FLOAT64"),
+        bigquery.SchemaField("AMOUNTUOM", "STRING"),
+        bigquery.SchemaField("RATE", "FLOAT64"),
+        bigquery.SchemaField("RATEUOM", "STRING"),
+        bigquery.SchemaField("STORETIME", "TIMESTAMP"),
+        bigquery.SchemaField("CGID", "INT64"),
+        bigquery.SchemaField("ORDERID", "INT64"),
+        bigquery.SchemaField("LINKORDERID", "INT64"),
+        bigquery.SchemaField("ORDERCATEGORYNAME", "STRING"),
+        bigquery.SchemaField("SECONDARYORDERCATEGORYNAME", "STRING"),
+        bigquery.SchemaField("ORDERCOMPONENTTYPEDESCRIPTION", "STRING"),
+        bigquery.SchemaField("ORDERCATEGORYDESCRIPTION", "STRING"),
+        bigquery.SchemaField("PATIENTWEIGHT", "FLOAT64"),
+        bigquery.SchemaField("TOTALAMOUNT", "FLOAT64"),
+        bigquery.SchemaField("TOTALAMOUNTUOM", "STRING"),
+        bigquery.SchemaField("ISOPENBAG", "INT64"),
+        bigquery.SchemaField("CONTINUEINNEXTDEPT", "INT64"),
+        bigquery.SchemaField("CANCELREASON", "INT64"),
+        bigquery.SchemaField("STATUSDESCRIPTION", "STRING"),
+        bigquery.SchemaField("COMMENTS_EDITEDBY", "STRING"),
+        bigquery.SchemaField("COMMENTS_CANCELEDBY", "STRING"),
+        bigquery.SchemaField("COMMENTS_DATE", "TIMESTAMP"),
+        bigquery.SchemaField("ORIGINALAMOUNT", "FLOAT64"),
+        bigquery.SchemaField("ORIGINALRATE", "FLOAT64"),
+    ],
+    "prescriptions": [
+        bigquery.SchemaField("ROW_ID", "INT64"),
+        bigquery.SchemaField("SUBJECT_ID", "INT64"),
+        bigquery.SchemaField("HADM_ID", "INT64"),
+        bigquery.SchemaField("ICUSTAY_ID", "INT64"),
+        bigquery.SchemaField("STARTDATE", "TIMESTAMP"),
+        bigquery.SchemaField("ENDDATE", "TIMESTAMP"),
+        bigquery.SchemaField("DRUG_TYPE", "STRING"),
+        bigquery.SchemaField("DRUG", "STRING"),
+        bigquery.SchemaField("DRUG_NAME_POE", "STRING"),
+        bigquery.SchemaField("DRUG_NAME_GENERIC", "STRING"),
+        bigquery.SchemaField("FORMULARY_DRUG_CD", "STRING"),
+        bigquery.SchemaField("GSN", "STRING"),
+        bigquery.SchemaField("NDC", "STRING"),
+        bigquery.SchemaField("PROD_STRENGTH", "STRING"),
+        bigquery.SchemaField("DOSE_VAL_RX", "STRING"),
+        bigquery.SchemaField("DOSE_UNIT_RX", "STRING"),
+        bigquery.SchemaField("FORM_VAL_DISP", "STRING"),
+        bigquery.SchemaField("FORM_UNIT_DISP", "STRING"),
+        bigquery.SchemaField("ROUTE", "STRING"),
+    ],
 }
 
 
@@ -143,10 +255,20 @@ def raw_uri(config: dict[str, Any], table_key: str) -> str:
     return f"gs://{gcs['bucket']}/{gcs['raw_prefix'].strip('/')}/{file_name}"
 
 
-def load_raw_tables(client: bigquery.Client, config: dict[str, Any]) -> None:
+def load_raw_tables(client: bigquery.Client, config: dict[str, Any], table_keys: list[str] | None = None) -> None:
     ensure_dataset(client, config)
 
-    for table_key, table_name in config["tables"].items():
+    tables_to_load = config["tables"]
+    if table_keys:
+        unknown = sorted(set(table_keys) - set(tables_to_load))
+        if unknown:
+            raise ValueError(f"Unknown table keys for --load-only: {unknown}")
+        tables_to_load = {key: tables_to_load[key] for key in table_keys}
+
+    for table_key, table_name in tables_to_load.items():
+        if table_key not in TABLE_SCHEMAS:
+            raise ValueError(f"No BigQuery schema is defined for table key: {table_key}")
+
         job_config = bigquery.LoadJobConfig(
             source_format=bigquery.SourceFormat.CSV,
             skip_leading_rows=1,
@@ -166,24 +288,30 @@ def load_raw_tables(client: bigquery.Client, config: dict[str, Any]) -> None:
 def build_template_values(config: dict[str, Any]) -> dict[str, Any]:
     tables = config["tables"]
     outputs = config["outputs"]
+    table_values = {f"{key}_table": value for key, value in tables.items()}
+    output_values = {f"{key}": value for key, value in outputs.items()}
     return {
         "project_id": config["project_id"],
         "dataset_id": config["dataset_id"],
         "window_hours": config["window_hours"],
         "top_n_items": config["top_n_items"],
-        "chartevents_table": tables["chartevents"],
-        "icustays_table": tables["icustays"],
-        "d_items_table": tables["d_items"],
-        "patients_table": tables["patients"],
-        "admissions_table": tables["admissions"],
-        "selected_items_table": outputs["selected_items_table"],
-        "features_table": outputs["features_table"],
-        "quality_report_table": outputs["quality_report_table"],
+        "top_n_chart_items": config.get("top_n_chart_items", config["top_n_items"]),
+        "top_n_lab_items": config.get("top_n_lab_items", 30),
+        "top_n_output_items": config.get("top_n_output_items", 20),
+        "top_n_input_items": config.get("top_n_input_items", 30),
+        "top_n_drugs": config.get("top_n_drugs", 30),
+        **table_values,
+        **output_values,
     }
 
 
-def run_preprocessing_query(client: bigquery.Client, config: dict[str, Any], dry_run: bool) -> None:
-    sql = render_sql(SQL_TEMPLATE, build_template_values(config))
+def run_preprocessing_query(
+    client: bigquery.Client,
+    config: dict[str, Any],
+    dry_run: bool,
+    sql_template: Path,
+) -> None:
+    sql = render_sql(sql_template, build_template_values(config))
     job_config = bigquery.QueryJobConfig(
         use_legacy_sql=False,
         dry_run=dry_run,
@@ -237,10 +365,16 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the BigQuery ICU LOS preprocessing pipeline.")
     parser.add_argument("--config", type=Path, default=Path("configs/bigquery.yaml"))
     parser.add_argument("--load-raw", action="store_true", help="Load raw CSV files from GCS into BigQuery first.")
+    parser.add_argument(
+        "--load-only",
+        nargs="+",
+        help="Load only selected table keys from the config, for example: --load-only outputevents prescriptions.",
+    )
     parser.add_argument("--skip-query", action="store_true", help="Skip preprocessing SQL execution.")
     parser.add_argument("--export", action="store_true", help="Export the BigQuery features table to GCS.")
     parser.add_argument("--download", type=Path, help="Download exported feature shards to this local directory.")
     parser.add_argument("--dry-run", action="store_true", help="Validate query and estimate bytes without running it.")
+    parser.add_argument("--sql-template", type=Path, default=SQL_TEMPLATE, help="SQL template to render and run.")
     return parser.parse_args()
 
 
@@ -249,13 +383,13 @@ def main() -> None:
     config = read_config(args.config)
     client = bigquery.Client(project=config["project_id"])
 
-    if args.load_raw:
-        load_raw_tables(client, config)
+    if args.load_raw or args.load_only:
+        load_raw_tables(client, config, args.load_only)
     else:
         ensure_dataset(client, config)
 
     if not args.skip_query:
-        run_preprocessing_query(client, config, args.dry_run)
+        run_preprocessing_query(client, config, args.dry_run, args.sql_template)
 
     if args.export and not args.dry_run:
         export_features(client, config)

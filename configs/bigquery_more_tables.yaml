@@ -1,0 +1,52 @@
+project_id: icu-los-prediction-20260510
+dataset_id: icu_los
+location: EU
+
+window_hours: 24
+top_n_items: 50
+top_n_chart_items: 50
+top_n_lab_items: 30
+top_n_output_items: 20
+top_n_input_items: 30
+top_n_drugs: 30
+
+gcs:
+  bucket: icu-los-prediction-20260510-raw
+  raw_prefix: raw
+  processed_prefix: processed
+
+tables:
+  chartevents: CHARTEVENTS
+  icustays: ICUSTAYS
+  d_items: D_ITEMS
+  patients: PATIENTS
+  admissions: ADMISSIONS
+  labevents: LABEVENTS
+  d_labitems: D_LABITEMS
+  outputevents: OUTPUTEVENTS
+  inputevents_cv: INPUTEVENTS_CV
+  inputevents_mv: INPUTEVENTS_MV
+  prescriptions: PRESCRIPTIONS
+
+raw_files:
+  chartevents: CHARTEVENTS.csv.gz
+  icustays: ICUSTAYS.csv.gz
+  d_items: D_ITEMS.csv.gz
+  patients: PATIENTS.csv.gz
+  admissions: ADMISSIONS.csv.gz
+  labevents: LABEVENTS.csv.gz
+  d_labitems: D_LABITEMS.csv.gz
+  outputevents: OUTPUTEVENTS.csv.gz
+  inputevents_cv: INPUTEVENTS_CV.csv.gz
+  inputevents_mv: INPUTEVENTS_MV.csv.gz
+  prescriptions: PRESCRIPTIONS.csv.gz
+
+outputs:
+  selected_items_table: selected_items_more_tables
+  selected_lab_items_table: selected_lab_items_24h
+  selected_output_items_table: selected_output_items_24h
+  selected_input_items_table: selected_input_items_24h
+  selected_drugs_table: selected_drugs_24h
+  features_table: features_24h_more_tables
+  quality_report_table: quality_report_24h_more_tables
+  features_export_uri: gs://icu-los-prediction-20260510-raw/processed/features_24h_more_tables_*.csv

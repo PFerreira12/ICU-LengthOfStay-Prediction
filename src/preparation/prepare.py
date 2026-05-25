@@ -158,15 +158,18 @@ def build_config(args: argparse.Namespace) -> PrepareConfig:
     and fallback YAML configuration values.
     """
     
-    raw = read_config(args.config)
-    
+    raw = read_config(args.config) if args.config else {}
+    output = raw.get("output", {})
+
     return PrepareConfig(
-        output_train=Path(args.output_train or raw["output"]["train"]),
-        
-        output_test=Path(args.output_test or raw["output"]["test"]),
-        
+        input_features=Path(args.input_features or output.get("features", "data/processed/features_24h.csv")),
+
+        output_train=Path(args.output_train or output.get("train", "data/processed/train.csv")),
+
+        output_test=Path(args.output_test or output.get("test", "data/processed/test.csv")),
+
         test_size=args.test_size or raw.get("test_size", 0.2),
-        
+
         random_state=args.random_state or raw.get("random_state", 42),
     )
 
@@ -177,6 +180,8 @@ def parse_args() -> argparse.Namespace:
     Parse command-line arguments for the preparation pipeline.
     """
     
+    parser.add_argument("--config", type=Path, default=Path("configs/preprocessing.yaml"))
+    parser.add_argument("--input-features", type=Path)
     parser.add_argument("--output-train", type=Path)
     parser.add_argument("--output-test", type=Path)
     parser.add_argument("--test-size", type=float)
@@ -196,11 +201,7 @@ def main() -> None:
     logging.info("Starting preparation pipeline")
     start_time = time.time()
 
-    config = PrepareConfig(
-        input_features=Path("data/processed/features_24h.csv"), 
-        output_train=Path("data/processed/train.csv"),
-        output_test=Path("data/processed/test.csv"),
-    )
+    config = build_config(parse_args())
 
     logging.info(f"Loading data from {config.input_features}")
     features = pd.read_csv(config.input_features)
