@@ -220,17 +220,66 @@ O baseline atual usa 5 tabelas:
 ICUSTAYS + CHARTEVENTS + D_ITEMS + PATIENTS + ADMISSIONS
 ```
 
+Estas 5 tabelas foram escolhidas como ponto de partida porque cobrem o mínimo necessário para construir um dataset clínico coerente:
+
+- `ICUSTAYS` define a unidade de análise (`ICUSTAY_ID`), o momento de entrada na UCI (`INTIME`) e o target `LOS`;
+- `CHARTEVENTS` fornece medições clínicas temporais feitas durante a estadia na UCI;
+- `D_ITEMS` permite interpretar os `ITEMID`s de `CHARTEVENTS`, associando cada código a uma descrição clínica;
+- `PATIENTS` acrescenta contexto demográfico, sobretudo `GENDER` e idade calculada a partir de `DOB`;
+- `ADMISSIONS` acrescenta contexto administrativo e hospitalar, como tipo de admissão, origem da admissão, seguro, etnia, estado civil e tempo no serviço de urgência.
+
+Ou seja, esta versão combina o target, sinais clínicos iniciais e contexto básico do paciente/admissão. Serve como baseline porque já permite prever LOS com informação relevante, mas sem usar tabelas clínicas adicionais.
+
 A nova versão com 7 tabelas adiciona dados laboratoriais:
 
 ```text
 ICUSTAYS + CHARTEVENTS + D_ITEMS + PATIENTS + ADMISSIONS + LABEVENTS + D_LABITEMS
 ```
 
+As duas tabelas novas têm funções complementares:
+
+- `LABEVENTS`: contém resultados laboratoriais associados à admissão hospitalar, como análises de sangue e outros exames laboratoriais. Estes valores podem refletir gravidade clínica inicial, disfunções orgânicas e estado fisiológico do paciente.
+- `D_LABITEMS`: contém a descrição dos `ITEMID`s de `LABEVENTS`, permitindo identificar o significado clínico de cada exame laboratorial.
+
+Tal como em `CHARTEVENTS`, os dados laboratoriais são filtrados para as primeiras 24 horas após `INTIME`. Depois, os exames laboratoriais mais frequentes são selecionados e agregados por `ICUSTAY_ID`.
+
+Para cada laboratório selecionado, são geradas features do tipo:
+
+- `lab_<ITEMID>_mean`;
+- `lab_<ITEMID>_min`;
+- `lab_<ITEMID>_max`;
+- `lab_<ITEMID>_std`;
+- `lab_<ITEMID>_count`;
+- `lab_<ITEMID>_last`.
+
+Esta versão permite testar se adicionar análises laboratoriais iniciais melhora a previsão face ao baseline de 5 tabelas.
+
 A nova versão com 9 tabelas adiciona também outputs e prescrições:
 
 ```text
 ICUSTAYS + CHARTEVENTS + D_ITEMS + PATIENTS + ADMISSIONS + LABEVENTS + D_LABITEMS + OUTPUTEVENTS + PRESCRIPTIONS
 ```
+
+As duas tabelas novas acrescentam informação sobre balanço hídrico e tratamentos iniciados no início da estadia:
+
+- `OUTPUTEVENTS`: contém outputs registados na UCI, como urina e outros volumes eliminados. Estes dados podem indicar função renal, balanço de fluidos e gravidade do estado clínico.
+- `PRESCRIPTIONS`: contém prescrições/medicação associadas à admissão hospitalar. No pipeline, são consideradas prescrições com `STARTDATE` dentro da janela inicial de 24 horas.
+
+Em `OUTPUTEVENTS`, o pipeline seleciona os outputs mais frequentes dentro da janela temporal e cria features por `ICUSTAY_ID`:
+
+- `output_<ITEMID>_sum`: soma do volume/valor registado;
+- `output_<ITEMID>_count`: número de registos;
+- `output_<ITEMID>_last`: último valor observado na janela.
+
+Em `PRESCRIPTIONS`, o pipeline transforma os nomes dos fármacos em chaves normalizadas e seleciona os medicamentos mais frequentes. Para cada medicamento selecionado, cria uma feature de contagem:
+
+```text
+drug_<nome_normalizado>_count
+```
+
+Isto permite representar, de forma compacta, quais os tratamentos mais comuns iniciados nas primeiras 24 horas.
+
+Esta versão permite testar se sinais indiretos de gravidade, como volume de outputs e medicação inicial, acrescentam valor preditivo aos sinais vitais, laboratórios e contexto demográfico.
 
 Isto permite comparar se cada grupo extra de tabelas melhora a previsão de LOS.
 
